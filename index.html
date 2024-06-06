@@ -33,6 +33,11 @@
 </head>
 <body>
     <h1>Gerenciamento de Usuários</h1>
+    <div>
+        <label for="jwt-token">JWT Token:</label>
+        <input type="text" id="jwt-token" placeholder="Insira o JWT Token aqui" style="width: 50%;">
+        <button id="load-users-btn">Carregar Usuários</button>
+    </div>
     <table>
         <thead>
             <tr>
@@ -65,9 +70,15 @@
         document.addEventListener('DOMContentLoaded', function() {
             const userTableBody = document.getElementById('user-table-body');
             const updateUserForm = document.getElementById('update-user-form');
+            const loadUsersBtn = document.getElementById('load-users-btn');
+
+            function getAuthHeader() {
+                const token = document.getElementById('jwt-token').value;
+                return { Authorization: `Bearer ${token}` };
+            }
 
             function loadUsers() {
-                axios.get('https://testefaculdade.pythonanywhere.com/api/users/')
+                axios.get('https://testefaculdade.pythonanywhere.com/api/users/', { headers: getAuthHeader() })
                     .then(response => {
                         userTableBody.innerHTML = '';
                         response.data.forEach(user => {
@@ -102,7 +113,7 @@
 
             window.deleteUser = function(id) {
                 if (confirm('Tem certeza que deseja deletar este usuário?')) {
-                    axios.delete(`https://testefaculdade.pythonanywhere.com/api/users/${id}/`)
+                    axios.delete(`https://testefaculdade.pythonanywhere.com/api/users/${id}/`, { headers: getAuthHeader() })
                         .then(response => {
                             loadUsers();
                         })
@@ -126,7 +137,7 @@
                     data.password = password;
                 }
 
-                axios.put(`https://testefaculdade.pythonanywhere.com/api/users/${id}/`, data)
+                axios.put(`https://testefaculdade.pythonanywhere.com/api/users/${id}/`, data, { headers: getAuthHeader() })
                     .then(response => {
                         loadUsers();
                         updateUserForm.reset();
@@ -136,7 +147,8 @@
                     });
             });
 
-            loadUsers();
+            // Load users when the button is clicked
+            loadUsersBtn.addEventListener('click', loadUsers);
         });
     </script>
 </body>
