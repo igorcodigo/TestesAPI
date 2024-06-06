@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Usuários</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .form-container {
+            margin: 20px 0;
+        }
+        .form-container input {
+            padding: 5px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gerenciamento de Usuários</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="user-table-body">
+            <!-- Users will be loaded here -->
+        </tbody>
+    </table>
+    <div class="form-container">
+        <h2>Atualizar Usuário</h2>
+        <form id="update-user-form">
+            <input type="hidden" id="update-user-id">
+            <input type="text" id="update-username" placeholder="Username" required>
+            <input type="text" id="update-first-name" placeholder="First Name">
+            <input type="text" id="update-last-name" placeholder="Last Name">
+            <input type="email" id="update-email" placeholder="Email" required>
+            <input type="password" id="update-password" placeholder="Password">
+            <button type="submit">Atualizar</button>
+        </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userTableBody = document.getElementById('user-table-body');
+            const updateUserForm = document.getElementById('update-user-form');
+
+            function loadUsers() {
+                axios.get('https://testefaculdade.pythonanywhere.com/api/users/')
+                    .then(response => {
+                        userTableBody.innerHTML = '';
+                        response.data.forEach(user => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${user.id}</td>
+                                <td>${user.username}</td>
+                                <td>${user.first_name}</td>
+                                <td>${user.last_name}</td>
+                                <td>${user.email}</td>
+                                <td>
+                                    <button onclick="editUser(${user.id}, '${user.username}', '${user.first_name}', '${user.last_name}', '${user.email}')">Editar</button>
+                                    <button onclick="deleteUser(${user.id})">Deletar</button>
+                                </td>
+                            `;
+                            userTableBody.appendChild(row);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar usuários:', error);
+                    });
+            }
+
+            window.editUser = function(id, username, firstName, lastName, email) {
+                document.getElementById('update-user-id').value = id;
+                document.getElementById('update-username').value = username;
+                document.getElementById('update-first-name').value = firstName;
+                document.getElementById('update-last-name').value = lastName;
+                document.getElementById('update-email').value = email;
+                document.getElementById('update-password').value = '';
+            }
+
+            window.deleteUser = function(id) {
+                if (confirm('Tem certeza que deseja deletar este usuário?')) {
+                    axios.delete(`https://testefaculdade.pythonanywhere.com/api/users/${id}/`)
+                        .then(response => {
+                            loadUsers();
+                        })
+                        .catch(error => {
+                            console.error('Erro ao deletar usuário:', error);
+                        });
+                }
+            }
+
+            updateUserForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const id = document.getElementById('update-user-id').value;
+                const username = document.getElementById('update-username').value;
+                const firstName = document.getElementById('update-first-name').value;
+                const lastName = document.getElementById('update-last-name').value;
+                const email = document.getElementById('update-email').value;
+                const password = document.getElementById('update-password').value;
+
+                const data = { username, first_name: firstName, last_name: lastName, email };
+                if (password) {
+                    data.password = password;
+                }
+
+                axios.put(`https://testefaculdade.pythonanywhere.com/api/users/${id}/`, data)
+                    .then(response => {
+                        loadUsers();
+                        updateUserForm.reset();
+                    })
+                    .catch(error => {
+                        console.error('Erro ao atualizar usuário:', error);
+                    });
+            });
+
+            loadUsers();
+        });
+    </script>
+</body>
+</html>
